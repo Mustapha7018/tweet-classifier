@@ -1,0 +1,38 @@
+# Single source of truth for tunable parameters.
+# Anything changed here propagates to data loading, training, and evaluation.
+
+random_state: 42
+
+paths:
+  raw_data: data/raw/Data.json
+  processed_dir: data/processed
+  models_dir: models
+  reports_dir: reports
+  figures_dir: reports/figures
+
+split:
+  test_size: 0.15        # 15% held-out test
+  val_size: 0.15         # 15% validation (taken from the remaining 85%)
+  stratify: true
+
+preprocessing:
+  lowercase: true
+  strip_entity_markup: true   # remove {@...@} wrapping
+  replace_urls: true
+  replace_mentions: true
+  replace_hashtags: false     # keep hashtag tokens — topical signal
+  collapse_whitespace: true
+
+cv:
+  n_splits: 5
+  shuffle: true
+
+# Class labels (id → name). Kept here so model artefacts stay self-describing.
+# Mapping verified against Data.json.
+class_names:
+  0: arts_&_culture
+  1: business_&_entrepreneurs
+  2: pop_culture
+  3: daily_life
+  4: sports_&_gaming
+  5: science_&_technology

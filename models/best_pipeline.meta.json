@@ -1,0 +1,81 @@
+{
+  "trained_at_utc": "2026-05-22T14:03:47.509651+00:00",
+  "experiment": "char_tfidf_svm",
+  "representation": "char_tfidf",
+  "classifier": "svm",
+  "class_names": [
+    "arts_&_culture",
+    "business_&_entrepreneurs",
+    "pop_culture",
+    "daily_life",
+    "sports_&_gaming",
+    "science_&_technology"
+  ],
+  "test_metrics": {
+    "accuracy": 0.8210961737331954,
+    "macro_f1": 0.66975301285013,
+    "weighted_f1": 0.8170483030543092,
+    "per_class": {
+      "arts_&_culture": {
+        "precision": 0.5555555555555556,
+        "recall": 0.22727272727272727,
+        "f1": 0.3225806451612903,
+        "support": 22,
+        "tp": 5,
+        "fp": 4,
+        "fn": 17,
+        "tn": 941
+      },
+      "business_&_entrepreneurs": {
+        "precision": 0.6,
+        "recall": 0.5581395348837209,
+        "f1": 0.5783132530120482,
+        "support": 43,
+        "tp": 24,
+        "fp": 16,
+        "fn": 19,
+        "tn": 908
+      },
+      "pop_culture": {
+        "precision": 0.8431876606683805,
+        "recall": 0.870026525198939,
+        "f1": 0.856396866840731,
+        "support": 377,
+        "tp": 328,
+        "fp": 61,
+        "fn": 49,
+        "tn": 529
+      },
+      "daily_life": {
+        "precision": 0.672,
+        "recall": 0.6363636363636364,
+        "f1": 0.6536964980544747,
+        "support": 132,
+        "tp": 84,
+        "fp": 41,
+        "fn": 48,
+        "tn": 794
+      },
+      "sports_&_gaming": {
+        "precision": 0.9132947976878613,
+        "recall": 0.9186046511627907,
+        "f1": 0.9159420289855073,
+        "support": 344,
+        "tp": 316,
+        "fp": 30,
+        "fn": 28,
+        "tn": 593
+      },
+      "science_&_technology": {
+        "precision": 0.6379310344827587,
+        "recall": 0.7551020408163265,
+        "f1": 0.6915887850467289,
+        "support": 49,
+        "tp": 37,
+        "fp": 21,
+        "fn": 12,
+        "tn": 897
+      }
+    }
+  }
+}
