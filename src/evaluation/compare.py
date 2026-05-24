@@ -1,23 +1,4 @@
-"""Cross-validated comparison of all experiments with significance testing.
-
-The headline leaderboard in ``reports/results.csv`` reports validation-set
-metrics from a single split. That is enough for picking a deployment
-candidate, but to defend the *ranking* in the report we need to show the
-gaps are not just noise from the particular train/val split. This module
-adds:
-
-1. **Stratified 5-fold cross-validation** over the *training* set so we
-   get a mean ± standard deviation for each experiment. This is the
-   standard reliability check for text-classification papers
-   (Dietterich, 1998).
-
-2. **McNemar's test** on the test-set predictions of the two top
-   experiments, which is the recommended significance test for
-   comparing two classifiers evaluated on the same data
-   (Dietterich, 1998; Raschka, 2018).
-
-Run with ``python -m src.evaluation.compare``.
-"""
+"""Cross-validation and McNemar comparisons for experiments."""
 
 from __future__ import annotations
 
@@ -35,7 +16,7 @@ from ..models.registry import DEFAULT_EXPERIMENTS, build_pipeline
 
 
 def cross_validate_experiments(scoring: str = "f1_macro") -> pd.DataFrame:
-    """Run stratified k-fold CV on the training split for every experiment."""
+    """Run stratified k-fold CV for every experiment."""
     cfg = load_config()
     splits = make_splits()
     train = splits["train"]
@@ -70,11 +51,7 @@ def cross_validate_experiments(scoring: str = "f1_macro") -> pd.DataFrame:
 def mcnemar_test(y_true: np.ndarray,
                  y_pred_a: np.ndarray,
                  y_pred_b: np.ndarray) -> dict:
-    """McNemar's chi-squared test (with continuity correction) for paired
-    classifier predictions on the same test set.
-
-    Returns the 2×2 contingency table, the test statistic, and the p-value.
-    """
+    """Run McNemar's paired test."""
     a_correct = (y_pred_a == y_true)
     b_correct = (y_pred_b == y_true)
 
@@ -83,10 +60,9 @@ def mcnemar_test(y_true: np.ndarray,
     n10 = int(np.sum( a_correct & ~b_correct))   # only A right
     n11 = int(np.sum( a_correct &  b_correct))   # both right
 
-    # Use the exact binomial form when n01 + n10 is small;
-    # else use the chi-squared form with continuity correction.
+    # Use the exact binomial form for small discordant counts.
     if (n01 + n10) < 25:
-        # Exact: P(K >= max | n=n01+n10, p=0.5) two-sided
+        # Exact two-sided binomial test.
         k = max(n01, n10)
         n = n01 + n10
         if n == 0:
@@ -122,9 +98,7 @@ def main() -> None:
     print(f"[compare] CV results → {cv_path}")
     print(cv_df.to_string(index=False))
 
-    # ------------------------------------------------------------------
-    # McNemar between top-2 experiments on the held-out test set
-    # ------------------------------------------------------------------
+    # Compare the top two experiments on the held-out test set.
     splits = make_splits()
     train, val, test = splits["train"], splits["val"], splits["test"]
     combined = pd.concat([train, val], ignore_index=True)

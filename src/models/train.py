@@ -1,18 +1,4 @@
-"""Train all experiments and persist the best pipeline for the product.
-
-Running ``python -m src.models.train`` will:
-
-1. Load splits (creating them if absent).
-2. For each :class:`ExperimentSpec` in the default grid, fit on
-   ``train``, validate on ``val``, and record metrics.
-3. Pick the best by macro-F1 on validation, refit on ``train + val``,
-   and persist to ``models/best_pipeline.joblib``.
-4. Write ``reports/results.csv`` and confusion-matrix figures.
-
-The "refit on train + val" step is standard practice once
-hyperparameters / model choice have been frozen on the validation set —
-the test set is touched once at evaluation time only.
-"""
+"""Train experiments and persist the best pipeline."""
 
 from __future__ import annotations
 
@@ -68,7 +54,7 @@ def run_all_experiments() -> pd.DataFrame:
         rows.append(metrics)
         fitted[spec.name] = pipe
 
-        # Validation confusion matrix per experiment
+        # Save a validation confusion matrix per experiment.
         y_pred_val = pipe.predict(val["text"].tolist())
         save_confusion_matrix(
             y_true=val["label"].to_numpy(),
@@ -85,9 +71,7 @@ def run_all_experiments() -> pd.DataFrame:
         .reset_index(drop=True)
     )
 
-    # ------------------------------------------------------------------
-    # Pick winner, refit on train+val, evaluate on held-out test
-    # ------------------------------------------------------------------
+    # Pick the winner, refit on train+val, then evaluate on test.
     winner_name = leaderboard.iloc[0]["experiment"]
     winner_spec = next(s for s in DEFAULT_EXPERIMENTS if s.name == winner_name)
     print(f"\n[train] Winner on validation: {winner_name}")
@@ -112,9 +96,7 @@ def run_all_experiments() -> pd.DataFrame:
         out_path=figures_dir / f"cm_test_{winner_name}.png",
     )
 
-    # ------------------------------------------------------------------
-    # Persist artefacts
-    # ------------------------------------------------------------------
+    # Persist artefacts.
     leaderboard_path = reports_dir / "results.csv"
     leaderboard.to_csv(leaderboard_path, index=False)
     print(f"\n[train] Leaderboard written to {leaderboard_path}")

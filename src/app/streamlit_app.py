@@ -1,15 +1,4 @@
-"""Streamlit web app for the Tweet Topic Classifier product.
-
-This is the end-user surface. The brief specifies that end users have
-"no or very limited knowledge of data science technologies", so the UI:
-
-- Hides every implementation detail (no model dropdowns, no hyperparams).
-- Loads the persisted ``best_pipeline.joblib`` once at startup.
-- Offers exactly two interactions: paste-one-message and upload-a-CSV.
-- Returns a clearly-labelled topic plus a 0–1 confidence bar.
-
-Run with: ``streamlit run src/app/streamlit_app.py``
-"""
+"""Streamlit UI for the tweet topic classifier."""
 
 from __future__ import annotations
 
@@ -28,9 +17,7 @@ if str(PROJECT_ROOT) not in sys.path:
 from src.models.predict import load_model, predict  # noqa: E402
 
 
-# ---------------------------------------------------------------------------
-# Page setup
-# ---------------------------------------------------------------------------
+# Page setup.
 st.set_page_config(
     page_title="Tweet Topic Classifier",
     page_icon="🗂️",
@@ -73,9 +60,7 @@ with st.sidebar:
     )
 
 
-# ---------------------------------------------------------------------------
-# Tab 1 — single message
-# ---------------------------------------------------------------------------
+# Single-message tab.
 tab_single, tab_batch = st.tabs(["📝 Single message", "📂 Batch CSV"])
 
 with tab_single:
@@ -100,9 +85,7 @@ with tab_single:
                            "(higher = more confident)")
 
 
-# ---------------------------------------------------------------------------
-# Tab 2 — batch CSV
-# ---------------------------------------------------------------------------
+# Batch CSV tab.
 with tab_batch:
     st.write("Upload a CSV with a column named `text`. "
              "The app appends `predicted_label` and `confidence` columns.")

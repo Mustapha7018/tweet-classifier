@@ -1,9 +1,4 @@
-"""Inference helper — load the persisted product model once.
-
-The app should never re-fit a model at request time. This module
-provides a small, cached loader and a simple ``predict`` wrapper that
-returns labels *plus* confidence scores.
-"""
+"""Cached inference helpers for the persisted model."""
 
 from __future__ import annotations
 
@@ -19,7 +14,7 @@ from ..config import load_config, resolve_path
 
 @lru_cache(maxsize=1)
 def load_model():
-    """Load the persisted product pipeline (cached for the process lifetime)."""
+    """Load the cached product pipeline."""
     cfg = load_config()
     models_dir = resolve_path(cfg["paths"]["models_dir"])
     model_path = models_dir / "best_pipeline.joblib"
@@ -35,22 +30,12 @@ def load_model():
 
 
 def predict(texts: list[str]) -> list[dict]:
-    """Predict topic labels for a list of texts.
-
-    Returns
-    -------
-    list[dict]
-        One dict per input text with keys: ``text``, ``label_id``,
-        ``label_name``, ``confidence`` (or ``decision_score`` if the
-        underlying classifier does not expose ``predict_proba``).
-    """
+    """Predict topic labels and confidence-like scores."""
     pipeline, meta = load_model()
     class_names: list[str] = meta.get("class_names", [])
     labels = pipeline.predict(texts)
 
-    # Calibration: not every estimator gives probabilities (LinearSVC
-    # doesn't). When unavailable, fall back to the absolute distance
-    # from the decision boundary so the UI can still show a magnitude.
+    # Fall back to decision margins when probabilities are unavailable.
     if hasattr(pipeline, "predict_proba"):
         probs = pipeline.predict_proba(texts)
         confidences = probs.max(axis=1)

@@ -1,29 +1,4 @@
-"""Registry of NLP-representation × classifier pipelines.
-
-Each entry returns a fully-configured sklearn ``Pipeline`` so the rest of
-the codebase treats every experiment identically: fit, predict, score.
-
-Three text representations are supported:
-
-- **bow**   — sparse bag-of-words counts
-- **tfidf** — TF-IDF weighted unigrams + bigrams (the standard baseline
-  from Manning et al., 2008)
-- **char_tfidf** — character n-grams (3–5) which are robust to the
-  spelling noise and slang typical of social-media text
-  (Joulin et al., 2017)
-
-Four classifiers are supported:
-
-- **logreg**  — multinomial logistic regression with L2 regularisation,
-  the canonical strong linear baseline for sparse text features
-- **svm**     — linear SVM (LinearSVC), historically the top performer
-  on TF-IDF text features (Joachims, 1998)
-- **nb**      — multinomial Naive Bayes, fast generative baseline
-- **rf**      — random forest, non-linear sanity check
-
-The product itself ships a single ``"best"`` model; the registry is what
-the experiment notebook iterates over.
-"""
+"""Registry of sklearn text-classification pipelines."""
 
 from __future__ import annotations
 
@@ -42,22 +17,13 @@ from ..config import load_config
 from ..features.preprocess import PreprocessingConfig, clean_series
 
 
-# ---------------------------------------------------------------------------
-# Top-level cleaner function.
-#
-# Defined at module scope (not as a lambda inside ``build_pipeline``) so that
-# ``joblib.dump`` can pickle the resulting Pipeline. Reads the current
-# preprocessing config at call time; this keeps the persisted artefact
-# config-driven without baking the config dict into the pickle.
-# ---------------------------------------------------------------------------
+# Module-scope so joblib can pickle persisted pipelines.
 def _clean_step(texts):
     cfg = load_config()
     prep_cfg = PreprocessingConfig.from_dict(cfg["preprocessing"])
     return clean_series(texts, prep_cfg)
 
-# ---------------------------------------------------------------------------
-# Text representations
-# ---------------------------------------------------------------------------
+# Text representations.
 
 
 def _make_vectoriser(kind: str):
@@ -88,18 +54,10 @@ def _make_vectoriser(kind: str):
     raise ValueError(f"Unknown vectoriser: {kind!r}")
 
 
-# ---------------------------------------------------------------------------
-# Classifiers
-# ---------------------------------------------------------------------------
+# Classifiers.
 
 def _make_classifier(kind: str, random_state: int):
-    """Factory for the supported classifiers.
-
-    ``class_weight="balanced"`` is set where the API exposes it so that the
-    minority classes (``arts_&_culture``, ``business_&_entrepreneurs``) are
-    not ignored by the optimiser — see King & Zeng (2001) for the
-    rationale on rare-event classification.
-    """
+    """Factory for supported classifiers."""
     if kind == "logreg":
         return LogisticRegression(
             max_iter=2000,
@@ -115,8 +73,7 @@ def _make_classifier(kind: str, random_state: int):
             random_state=random_state,
         )
     if kind == "nb":
-        # Multinomial NB has no class_weight parameter; we pass uniform priors
-        # by leaving fit_prior=True and rely on the training distribution.
+        # Multinomial NB has no class_weight parameter.
         return MultinomialNB(alpha=0.3)
     if kind == "rf":
         return RandomForestClassifier(
@@ -129,9 +86,7 @@ def _make_classifier(kind: str, random_state: int):
     raise ValueError(f"Unknown classifier: {kind!r}")
 
 
-# ---------------------------------------------------------------------------
-# Pipeline factory
-# ---------------------------------------------------------------------------
+# Pipeline factory.
 
 
 @dataclass(frozen=True)
@@ -154,11 +109,7 @@ CLASSIFIERS = ("logreg", "svm", "nb", "rf")
 
 
 def build_pipeline(spec: ExperimentSpec) -> Pipeline:
-    """Build a fresh sklearn Pipeline for the given experiment spec.
-
-    The pipeline encapsulates the *entire* inference path so the persisted
-    artefact at deployment time only needs ``pipeline.predict(raw_texts)``.
-    """
+    """Build a fresh sklearn Pipeline for the experiment spec."""
     cfg = load_config()
     return Pipeline(
         steps=[
@@ -169,7 +120,7 @@ def build_pipeline(spec: ExperimentSpec) -> Pipeline:
     )
 
 
-# A reasonable default experiment grid for the report.
+# Default experiment grid for the report.
 DEFAULT_EXPERIMENTS: tuple[ExperimentSpec, ...] = (
     ExperimentSpec("baseline_tfidf_logreg", "tfidf", "logreg"),
     ExperimentSpec("bow_logreg",            "bow",   "logreg"),

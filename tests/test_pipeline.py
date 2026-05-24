@@ -1,12 +1,4 @@
-"""End-to-end smoke tests for the pipeline.
-
-These tests exist so a CI run can catch obvious regressions before the
-product is rebuilt or redeployed. They are deliberately fast — they
-fit one tiny pipeline on the training split and assert that the model
-beats a "predict the majority class" baseline.
-
-Run with ``pytest -q tests/``.
-"""
+"""Fast smoke tests for the pipeline."""
 
 from __future__ import annotations
 

@@ -1,19 +1,4 @@
-"""Evaluation metrics and figure helpers.
-
-The chosen metric for the leaderboard is **macro-F1**: it averages F1
-across classes *without* weighting by support, which is appropriate when
-classes are heavily imbalanced and minority-class performance matters
-(Sokolova & Lapalme, 2009). We also report:
-
-- accuracy            — overall agreement (the lay metric)
-- weighted F1         — sensible when one cares about overall throughput
-- per-class precision/recall/F1 — diagnostic for minority-class behaviour
-- TP / TN / FP / FN per class — required by the rubric, derived from the
-  confusion matrix
-
-Confusion matrices are written as PNG into ``reports/figures/`` with a
-consistent style so the report can include them verbatim.
-"""
+"""Evaluation metrics and confusion-matrix figure helpers."""
 
 from __future__ import annotations
 
@@ -33,12 +18,7 @@ from sklearn.metrics import (
 
 
 def per_class_counts(y_true, y_pred, n_classes: int) -> dict[int, dict[str, int]]:
-    """Compute TP/FP/FN/TN per class from a confusion matrix.
-
-    Uses the standard one-vs-rest decomposition:
-    for each class c, TP = correctly predicted as c; FP = predicted c but
-    truly other; FN = truly c but predicted other; TN = the remainder.
-    """
+    """Compute one-vs-rest TP/FP/FN/TN counts per class."""
     cm = confusion_matrix(y_true, y_pred, labels=list(range(n_classes)))
     out: dict[int, dict[str, int]] = {}
     total = cm.sum()

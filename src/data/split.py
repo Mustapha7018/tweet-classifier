@@ -1,13 +1,4 @@
-"""Create stratified train / validation / test splits and persist them.
-
-A single, frozen split is created once and reused across every experiment
-so that all model comparisons score on the *same* held-out test set —
-this is what makes the leaderboard in ``reports/results.csv`` meaningful.
-
-Stratification on the ``label`` column preserves the (heavily imbalanced)
-class proportions in every split, which is essential for honest reporting
-of macro-F1 on minority classes (Forman & Scholz, 2010).
-"""
+"""Create cached stratified train, validation, and test splits."""
 
 from __future__ import annotations
 
@@ -21,18 +12,7 @@ from .load import load_raw
 
 
 def make_splits(force: bool = False) -> dict[str, pd.DataFrame]:
-    """Build train/val/test splits and cache them to ``data/processed/``.
-
-    Parameters
-    ----------
-    force
-        If True, regenerate even if cached splits already exist.
-
-    Returns
-    -------
-    dict[str, pd.DataFrame]
-        Mapping of ``"train" | "val" | "test"`` to DataFrame.
-    """
+    """Build or load cached train/val/test splits."""
     cfg = load_config()
     processed_dir = resolve_path(cfg["paths"]["processed_dir"])
     processed_dir.mkdir(parents=True, exist_ok=True)
@@ -49,7 +29,7 @@ def make_splits(force: bool = False) -> dict[str, pd.DataFrame]:
     val_size = cfg["split"]["val_size"]
     stratify = df["label"] if cfg["split"]["stratify"] else None
 
-    # First split off the test set
+    # Split off the test set first.
     train_val, test = train_test_split(
         df,
         test_size=test_size,
@@ -57,8 +37,7 @@ def make_splits(force: bool = False) -> dict[str, pd.DataFrame]:
         stratify=stratify,
     )
 
-    # Then split train_val into train and val.
-    # val_size is given as a fraction of the *original* dataset, so we adjust.
+    # Convert original-dataset validation size to a train_val fraction.
     val_fraction_of_remaining = val_size / (1.0 - test_size)
     stratify_tv = train_val["label"] if cfg["split"]["stratify"] else None
     train, val = train_test_split(

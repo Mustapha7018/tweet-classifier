@@ -1,8 +1,4 @@
-"""Tweet topic classifier — product prototype.
-
-A modular, reproducible pipeline for multi-class tweet topic classification,
-designed around CRISP-DM and packaged as a deployable product.
-"""
+"""Tweet topic classifier package."""
 
 from pathlib import Path
 

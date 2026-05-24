@@ -1,5 +1,4 @@
-# Single source of truth for tunable parameters.
-# Anything changed here propagates to data loading, training, and evaluation.
+# Tunable parameters for data, training, and evaluation.
 
 random_state: 42
 
@@ -27,8 +26,7 @@ cv:
   n_splits: 5
   shuffle: true
 
-# Class labels (id → name). Kept here so model artefacts stay self-describing.
-# Mapping verified against Data.json.
+# Class labels, verified against Data.json.
 class_names:
   0: arts_&_culture
   1: business_&_entrepreneurs

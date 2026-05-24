@@ -1,10 +1,4 @@
-"""Load the raw tweet dataset into a clean, validated DataFrame.
-
-The source file (``Data.json``) is a JSON array of records with keys:
-``text, date, label, id, label_name``. The loader normalises types,
-validates the schema, drops duplicates, and exposes a single
-``load_raw()`` entry point used by every downstream module.
-"""
+"""Load and validate the raw tweet dataset."""
 
 from __future__ import annotations
 
@@ -19,26 +13,7 @@ REQUIRED_COLUMNS = {"text", "date", "label", "id", "label_name"}
 
 
 def load_raw(path: str | Path | None = None) -> pd.DataFrame:
-    """Load the raw JSON dataset into a DataFrame.
-
-    Parameters
-    ----------
-    path
-        Optional override for the raw data path. Defaults to the value
-        in ``config.yaml`` (``paths.raw_data``).
-
-    Returns
-    -------
-    pandas.DataFrame
-        Validated DataFrame with one row per tweet.
-
-    Raises
-    ------
-    FileNotFoundError
-        If the data file does not exist.
-    ValueError
-        If required columns are missing.
-    """
+    """Load ``Data.json`` as a validated DataFrame."""
     cfg = load_config()
     data_path = Path(path) if path is not None else resolve_path(cfg["paths"]["raw_data"])
 
@@ -57,14 +32,14 @@ def load_raw(path: str | Path | None = None) -> pd.DataFrame:
     if missing:
         raise ValueError(f"Required columns missing from raw data: {missing}")
 
-    # Type normalisation
+    # Normalise types.
     df["text"] = df["text"].astype(str)
     df["label"] = df["label"].astype(int)
     df["label_name"] = df["label_name"].astype(str)
     df["date"] = pd.to_datetime(df["date"], errors="coerce")
     df["id"] = df["id"].astype("int64")
 
-    # Drop fully duplicate rows and empty texts (defensive — none expected)
+    # Remove duplicate ids and blank text.
     n0 = len(df)
     df = df.drop_duplicates(subset=["id"]).reset_index(drop=True)
     df = df[df["text"].str.strip() != ""].reset_index(drop=True)
@@ -82,7 +57,7 @@ def label_distribution(df: pd.DataFrame) -> pd.DataFrame:
 
 
 if __name__ == "__main__":
-    # Quick sanity check from the command line
+    # Command-line sanity check.
     df = load_raw()
     print(f"Loaded {len(df):,} tweets, {df['label'].nunique()} classes.")
     print(label_distribution(df).to_string(index=False))

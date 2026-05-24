@@ -1,19 +1,4 @@
-"""Tweet-specific text preprocessing.
-
-The cleaner is intentionally light-touch:
-
-- Tweets are short, so aggressive stop-word removal can strip topical signal.
-- The dataset uses a ``{@entity@}`` markup convention (e.g.
-  ``{@Clinton LumberKings@}``) which must be normalised so that proper-noun
-  entities are still tokenised consistently across splits.
-- URLs and @mentions are replaced with placeholder tokens rather than
-  removed outright — their *presence* is informative even when the
-  specific URL or user-handle is not.
-- Hashtags are preserved (they carry strong topical signal in this corpus).
-
-Every step is controlled by ``config.yaml → preprocessing`` so that
-ablation experiments can be run without code changes.
-"""
+"""Light-touch tweet text preprocessing."""
 
 from __future__ import annotations
 
@@ -21,7 +6,7 @@ import re
 from dataclasses import dataclass
 from typing import Iterable
 
-# Regex patterns compiled once at import time.
+# Compile regexes once at import time.
 _URL_RE = re.compile(r"https?://\S+|www\.\S+", flags=re.IGNORECASE)
 _MENTION_RE = re.compile(r"(?<!\w)@\w+")
 _HASHTAG_RE = re.compile(r"#(\w+)")
@@ -46,20 +31,7 @@ class PreprocessingConfig:
 
 
 def clean_text(text: str, cfg: PreprocessingConfig | None = None) -> str:
-    """Apply the configured cleaning pipeline to one string.
-
-    Parameters
-    ----------
-    text
-        Raw tweet text.
-    cfg
-        Optional preprocessing config. Defaults to the standard config.
-
-    Returns
-    -------
-    str
-        Cleaned text, ready for tokenisation by the vectoriser.
-    """
+    """Clean one text value using the configured preprocessing steps."""
     if cfg is None:
         cfg = PreprocessingConfig()
 
@@ -74,8 +46,7 @@ def clean_text(text: str, cfg: PreprocessingConfig | None = None) -> str:
 
     if cfg.replace_hashtags:
         text = _HASHTAG_RE.sub(r"\1", text)
-    # else: leave "#word" intact — sklearn's default token_pattern strips the '#'
-    # but the word itself is preserved.
+    # Keep "#word"; sklearn strips the hash but keeps the token.
 
     if cfg.lowercase:
         text = text.lower()
